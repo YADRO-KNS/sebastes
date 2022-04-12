@@ -26,7 +26,7 @@ parser.add_argument(
     dest='hostname',
     type=str,
     required=True,
-    help='Set DNS name or IP address'
+    help='DNS name or IP address of Redfish target'
 )
 parser.add_argument(
     '-u',
@@ -45,12 +45,39 @@ parser.add_argument(
     help='Target password'
 )
 parser.add_argument(
-    '-o', action='store', dest='output', type=dir_path, required=True, help='Output directory')
-parser.add_argument('-e', action='store', nargs='?', dest='entry_point', type=str, default='/redfish/v1/',
-                    help='Redfish entry point')
-parser.add_argument('-m', action='store', nargs='?', dest='max_models', type=int, default=500, help='Max Models count')
-parser.add_argument('-c', action='store', nargs='?', dest='max_collection', type=int, default=50,
-                    help='Max Collection elements')
+    '-o',
+    action='store',
+    dest='output',
+    type=dir_path,
+    required=True,
+    help='Output directory'
+)
+parser.add_argument(
+    '-e',
+    action='store',
+    nargs='?',
+    dest='entry_point',
+    type=str,
+    default='/redfish/v1/',
+    help="Redfish entry point | optional default is '/redfish/v1/'"
+)
+parser.add_argument(
+    '-m',
+    action='store',
+    nargs='?',
+    dest='max_models',
+    type=int,
+    default=500,
+    help='Max Models to scan | optional default is 500'
+)
+parser.add_argument(
+    '-c',
+    action='store',
+    nargs='?',
+    dest='max_collection',
+    type=int,
+    default=50,
+    help='Max Collection elements to sample from | optional default is 50')
 
 args = parser.parse_args()
 
