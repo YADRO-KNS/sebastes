@@ -168,9 +168,6 @@ class Parser:
             category: DataModelCategory,
             collection: typing.Optional[str] = None,
             is_optional: bool = False) -> DataType:
-        is_list = True if collection is not None and collection == 'List' else False
-        is_dict = True if collection is not None and collection == 'Dict' else False
-
         data_type = DataType(
             type=category.value,
             import_=Import(
@@ -178,8 +175,8 @@ class Parser:
                 import_=category.value,
                 alias=None),
             is_optional=is_optional,
-            is_dict=is_dict,
-            is_list=is_list,
+            is_dict=collection == 'Dict',
+            is_list=collection == 'List',
             is_func=False,
             is_custom_type=True,
             strict=True,
