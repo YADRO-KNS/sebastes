@@ -4,7 +4,7 @@
            ,'))))))))))))))), /{
       '  ,'o  ))))))))))))))))={
          >    )))Sebastes)))))={
-         `,   ))))))\ \)))))))={     
+         `,   ))))))\ \)))))))={
            ',))))))))\/)))))' \{
              '*O))))))))O*'
 
@@ -204,13 +204,19 @@ if __name__ == '__main__':
 Some Redfish endpoints support patching. The link_patch method will call a passed link object and get it’s Etag value (if there is any) and then will perform a patch request with passed payload data.
 
 ```python
-def link_patch(self, link: Link, payload: typing.Optional[dict] = None) -> dict:
-    """
-    Call Patch request on specific link model
-    :param link: Model to patch
-    :param payload: Patch data
-    :return: JSON response data
-    """
+    def link_patch(self,
+                   link: Link,
+                   payload: typing.Optional[dict] = None,
+                   pass_etag: bool = True
+                   ) -> dict:
+        """
+        Call Patch request on specific link model
+        :param link: Model to patch
+        :param payload: Patch data
+        :param pass_etag: boolean flag, is set as true, will attempt to
+        use resource ETag value in PATCH request.
+        :return: JSON response data
+        """
     ...
 ```
 
