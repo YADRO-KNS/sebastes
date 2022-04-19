@@ -77,11 +77,17 @@ class DataManager:
         self._username = username
         self._password = password
 
-    def link_patch(self, link: Link, payload: typing.Optional[dict] = None) -> dict:
+    def link_patch(self,
+                   link: Link,
+                   payload: typing.Optional[dict] = None,
+                   pass_etag: bool = True
+                   ) -> dict:
         """
         Call Patch request on specific link model
         :param link: Model to patch
         :param payload: Patch data
+        :param pass_etag: boolean flag, is set as true, will attempt to
+        use resource ETag value in PATCH request.
         :return: JSON response data
         """
         if payload is None:
@@ -90,22 +96,22 @@ class DataManager:
         base_url = f"https://{self._hostname}"
         url = f'{base_url}{link.odata_id}'
 
-        get_response = requests.get(
-            url=url,
-            headers=headers,
-            verify=False,
-            auth=(
-                self._username,
-                self._password
+        if pass_etag is True:
+            get_response = requests.get(
+                url=url,
+                headers=headers,
+                verify=False,
+                auth=(
+                    self._username,
+                    self._password
+                )
             )
-        )
-        if get_response.ok:
-            etag = get_response.headers.get('etag')
-            if etag is not None:
-                headers['If-Match'] = etag
-            print(headers)
-        else:
-            raise Exception(get_response.content.decode())
+            if get_response.ok:
+                etag = get_response.headers.get('etag')
+                if etag is not None:
+                    headers['If-Match'] = etag
+            else:
+                raise Exception(get_response.content.decode())
 
         response = requests.patch(
             url=url,
