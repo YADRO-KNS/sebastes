@@ -60,8 +60,10 @@ category_fields: typing.Dict[DataModelCategory, typing.List[str]] = {
 optional_fields: typing.Dict[DataModelCategory, typing.List[str]] = {
     DataModelCategory.LINK: [],
     DataModelCategory.ACTION: ['redfish_action_info'],
-    DataModelCategory.RESOURCE: ['id', 'odata_context', 'description', 'name'],
-    DataModelCategory.COLLECTION: ['id', 'odata_context', 'description', 'name', 'members_odata_next_link'],
+    DataModelCategory.RESOURCE: ['id', 'odata_context', 'description', 'name', 'odata_etag'],
+    DataModelCategory.COLLECTION: [
+        'id', 'odata_context', 'description', 'name', 'odata_etag', 'members_odata_next_link'
+    ]
 }
 
 
@@ -71,6 +73,7 @@ class CustomDataModel(BaseModel):
     """
 
     _replace_words = [
+        ('_odata_etag', 'odata_etag'),
         ('_odata_id', 'odata_id'),
         ('_odata_context', 'odata_context'),
         ('_odata_type', 'odata_type'),

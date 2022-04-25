@@ -156,7 +156,7 @@ class RedfishData:
 
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, self.__class__):
-            return other.full_name == self.full_name
+            return other.full_name == self.full_name and other.parent == self.parent
         else:
             return False
 

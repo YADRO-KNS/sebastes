@@ -33,6 +33,7 @@ class Resource(Link):
 
     _url: str
     odata_type: str = pydantic.Field(..., alias='@odata.type')
+    odata_etag: typing.Optional[str] = pydantic.Field(None, alias='@odata.etag')
     name: typing.Optional[str] = pydantic.Field(None, alias='Name')
     id: typing.Optional[str] = pydantic.Field(None, alias='Id')
     odata_context: typing.Optional[str] = pydantic.Field(None, alias='@odata.context')
