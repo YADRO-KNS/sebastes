@@ -30,6 +30,8 @@ minutes!
     * 2288H V5
 * YADRO:
     * Vegman N110
+* Intel:
+    * S2600WFT
 
 ### Prerequisites
 
