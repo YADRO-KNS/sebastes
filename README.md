@@ -28,6 +28,7 @@ minutes!
     * Х2-740Х
 * Huawei:
     * 2288H V5
+    * 2288H V5 (10GE SFP+)
 * YADRO:
     * Vegman N110
 * Intel:
