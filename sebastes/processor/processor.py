@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import os
 import typing
@@ -25,6 +26,7 @@ class FileProcessor:
         self._redfish_datas = redfish_datas
         self._base_dir = base_dir
         self._problems: typing.List[Problem] = []
+        self._collections = collections.defaultdict(int)
 
     @property
     def problems(self) -> typing.List[Problem]:
@@ -94,7 +96,7 @@ class FileProcessor:
 
         for data in self._redfish_datas:
             if data.category == RedfishCategory.ELEMENT:
-                if data not in processed_data and data.parent not in processed_data:
+                if data not in processed_data:
                     processed_data.append(data)
                     processed_data.append(data.parent)
                     element = self._process_data(data)
@@ -106,7 +108,12 @@ class FileProcessor:
                     for from_, targets in collection.result.imports.items():
                         for target in targets:
                             imports.append(Import(from_=from_, import_=target, alias=None))
-                    file_name = collection.redfish_data.file_name
+                    collection_file_name = collection.redfish_data.file_name
+                    self._collections[collection_file_name] += 1
+                    if self._collections[collection_file_name] != 1:
+                        file_name = f'{collection_file_name}{self._collections[collection_file_name]}'
+                    else:
+                        file_name = collection.redfish_data.file_name
                     self._save_module([element.result.body, collection.result.body], imports, file_name)
                     init_data.append((file_name, [collection.redfish_data.full_name, element.redfish_data.full_name]))
 

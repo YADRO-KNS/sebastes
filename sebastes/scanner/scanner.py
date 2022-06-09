@@ -1,6 +1,9 @@
+import collections
+import copy
 import dataclasses
 import enum
 import functools
+import hashlib
 import json
 import random
 import re
@@ -82,7 +85,7 @@ class RedfishData:
             return RedfishCategory.COLLECTION
         elif self.parent is not None and \
                 self.parent.category == RedfishCategory.COLLECTION and \
-                self.name in self.parent.name:
+                self.name[:1] in self.parent.name:  # if name without additional number.
             return RedfishCategory.ELEMENT
         else:
             return RedfishCategory.RESOURCE
@@ -100,6 +103,13 @@ class RedfishData:
         Redfish model name
         """
         return self._name
+
+    @name.setter
+    def name(self, name: str) -> None:
+        """
+        Redfish model name
+        """
+        self._name = name
 
     @property
     def full_name(self) -> str:
@@ -156,9 +166,14 @@ class RedfishData:
 
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, self.__class__):
-            return other.full_name == self.full_name and other.parent == self.parent
+            return other.full_name == self.full_name and other.parent == self.parent and other.__hash__() == self.__hash__()
         else:
             return False
+
+    def __hash__(self):
+        hash_str = ''.join(sorted([k for k in self._data.keys()]))
+        hash_str = hash_str + self._name
+        return hashlib.md5(hash_str.encode()).hexdigest()
 
 
 # noinspection PyBroadException
@@ -203,19 +218,22 @@ class Scanner:
 
     def _get_uris(self, data: dict) -> typing.List[str]:
         result: typing.List[str] = []
-        for key, value in data.items():
-            if key == '@odata.id' and value not in result:
-                result.append(value)
-            if key == 'Members':
-                if len(data['Members']) > self._max_collection:
-                    for _entry in random.sample(data['Members'], self._max_collection):
-                        result += self._get_uris(_entry)
-                else:
-                    for _entry in data['Members']:
-                        result += self._get_uris(_entry)
-            if isinstance(value, dict):
-                result += self._get_uris(value)
-        return result
+        try:
+            for key, value in data.items():
+                if key == '@odata.id' and value not in result:
+                    result.append(value)
+                if key == 'Members':
+                    if len(data['Members']) > self._max_collection:
+                        for _entry in random.sample(data['Members'], self._max_collection):
+                            result += self._get_uris(_entry)
+                    else:
+                        for _entry in data['Members']:
+                            result += self._get_uris(_entry)
+                if isinstance(value, dict):
+                    result += self._get_uris(value)
+            return result
+        except Exception as e:
+            print(e)
 
     def _get_json(self, url: str) -> dict:
         headers = {'content-type': 'application/json'}
@@ -236,6 +254,10 @@ class Scanner:
             raise Exception(response.content.decode())
 
     def scan_models(self, entry_point: str = "/redfish/v1/", parent: typing.Optional[RedfishData] = None) -> None:
+        self._scan_models(entry_point, parent)
+        self._process_duplicated_names()
+
+    def _scan_models(self, entry_point: str, parent: typing.Optional[RedfishData] = None) -> None:
         """
         Scan target endpoint and all it's children.
         :param entry_point: scan start point
@@ -261,8 +283,24 @@ class Scanner:
 
                     for uri in self._get_uris(data):
                         if uri not in self._scanned_uris:
-                            self.scan_models(entry_point=uri, parent=model)
+                            self._scan_models(entry_point=uri, parent=model)
                 except Exception as error:
                     self._problems.append(Problem(url=entry_point, description=str(error)))
         else:
             log.info(f'Models limit was reached - {self._max_models}')
+
+    def _process_duplicated_names(self):
+        """
+        Process collection elements with the same parents but with different schemas.
+        """
+        scanned_models = collections.defaultdict(int)
+        scanned_parents = []
+        for model in self._redfish:
+            scanned_models[model.name] += 1
+            if scanned_models[model.name] > 1:  # If there are models with the same parent and different schemas.
+                if model.parent in scanned_parents and model.category == RedfishCategory.ELEMENT:
+                    new_parent = copy.deepcopy(model.parent)  # Create new parent with new name.
+                    new_parent.name = f'{new_parent.name}{scanned_models[model.name]}'
+                    model._parent = new_parent
+                model.name = f'{model.name}{scanned_models[model.name]}'
+            scanned_parents.append(model.parent)
